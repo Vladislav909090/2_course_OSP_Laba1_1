@@ -4,47 +4,8 @@
 #include <ftw.h>
 #include <getopt.h>
 
-unsigned char *searchBytes = NULL; // Глобальная переменная для хранения байтовой последовательности
-size_t searchLength = 0; // Длина байтовой последовательности
+const char* searchString; // Глобальная переменная для хранения строки для поиска
 int found = 0;
-
-// Функция для преобразования одного шестнадцатеричного символа в число
-int hexCharToInt(char c) {
-    if (c >= '0' && c <= '9') return c - '0';
-    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-    return -1;
-}
-
-// Функция для преобразования строки с шестнадцатеричными числами в массив байтов
-size_t hexStringToByteArray(const char* hexString, unsigned char** byteArray) {
-    size_t hexStringLength = strlen(hexString);
-    if (hexStringLength % 2 != 0) { // Должно быть четное число символов
-        fprintf(stderr, "Некорректная длина шестнадцатеричной строки\n");
-        return 0;
-    }
-    
-    size_t byteArrayLength = hexStringLength / 2;
-    *byteArray = (unsigned char*)malloc(byteArrayLength);
-    if (*byteArray == NULL) {
-        perror("Ошибка выделения памяти");
-        return 0;
-    }
-
-    for (size_t i = 0; i < hexStringLength; i += 2) {
-        int high = hexCharToInt(hexString[i]);
-        int low = hexCharToInt(hexString[i + 1]);
-        if (high == -1 || low == -1) {
-            free(*byteArray);
-            *byteArray = NULL;
-            fprintf(stderr, "Некорректный ввод шестнадцатеричной строки\n");
-            return 0;
-        }
-        (*byteArray)[i / 2] = (high << 4) + low;
-    }
-
-    return byteArrayLength;
-}
 
 void debugPrint(const char *message) {
     if (getenv("LAB11DEBUG") != NULL) {
@@ -52,19 +13,20 @@ void debugPrint(const char *message) {
     }
 }
 
-int searchStringInFile(const char *filepath, const unsigned char *searchBytes, size_t searchLength) {
+int searchStringInFile(const char *filepath, const char *searchStr) {
     FILE *file = fopen(filepath, "rb");
-    if (file == NULL) {
+    if (!file) {
         perror("Ошибка при открытии файла");
         return -1;
     }
 
+    const size_t searchLength = strlen(searchStr); // Вычисляем длину строки для поиска
     unsigned char buffer[1024];
     size_t bytesRead;
     while ((bytesRead = fread(buffer, 1, sizeof(buffer), file)) > 0) {
         for (size_t i = 0; i < bytesRead; ++i) {
-            if (i + searchLength <= bytesRead && memcmp(&buffer[i], searchBytes, searchLength) == 0) {
-                printf("Файл: %s, найдена последовательность: ", filepath);
+            if (i + searchLength <= bytesRead && memcmp(&buffer[i], searchStr, searchLength) == 0) {
+                printf("%s, найдена последовательность: ", filepath);
                 for (int j = -2; j < (int)searchLength + 2; ++j) {
                     if (i+j >= 0 && i+j < bytesRead) {
                         if (j >= 0 && j < (int)searchLength) {
@@ -87,13 +49,14 @@ int searchStringInFile(const char *filepath, const unsigned char *searchBytes, s
 
 int processEntry(const char *fpath, const struct stat *sb, int typeflag) {
     if (typeflag == FTW_F) {
-        searchStringInFile(fpath, searchBytes, searchLength);
+        searchStringInFile(fpath, searchString);
     }
     return 0;
 }
 
 void printHelp() {
-    printf("Использование: lab11vslN3245 [опции] <директория> <последовательность байтов>\n");
+    printf("Использование:\n");
+    printf("lab11vslN3245 [опции] <директория> \"<строка для поиска>\"\n");
     printf("Опции:\n");
     printf("-v, --version    Вывод версии программы\n");
     printf("-h, --help       Вывод этой справки\n");
@@ -131,20 +94,14 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    searchLength = hexStringToByteArray(argv[optind + 1], &searchBytes);
-    if (searchBytes == NULL || searchLength == 0) {
-        fprintf(stderr, "Ошибка при преобразовании строки в байты\n");
-        return EXIT_FAILURE;
-    }
+    searchString = argv[optind + 1];
 
     if (ftw(argv[optind], processEntry, 20) == -1) {
         perror("ftw");
-        free(searchBytes);
         return EXIT_FAILURE;
     }
 
-    printf("В каталоге %s найдено %d совпадений\n", argv[optind], found);
+    printf("\nВ каталоге %s найдено %d совпадений\n", argv[optind], found);
 
-    free(searchBytes);
     return EXIT_SUCCESS;
 }
