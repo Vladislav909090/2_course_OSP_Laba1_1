@@ -41,35 +41,57 @@ int searchStringInFile(const char *filepath, const char *searchStr) {
     }
 
     const size_t searchLength = strlen(searchStr); // Вычисляем длину строки для поиска
-    unsigned char buffer[1024];
-    size_t bytesRead;
-    while ((bytesRead = fread(buffer, 1, sizeof(buffer), file)) > 0) {
-        for (size_t i =  0; i < bytesRead; ++i) {
-            if (i + searchLength <= bytesRead && memcmp(&buffer[i], searchStr, searchLength) == 0) {
-                printf("найдено \"%s\" (позиция начала - %zu): ", searchStr, i);
+    if (searchLength == 0) {
+        fclose(file); // Если строка поиска пуста, закрываем файл и выходим
+        return 0;
+    }
+
+    unsigned char buffer[1024 + searchLength - 1]; // Увеличенный буфер
+    size_t prevPortion = 0; // Размер сохраненных данных от предыдущего чтения
+
+    while (1) {
+        size_t bytesRead = fread(buffer + prevPortion, 1, sizeof(buffer) - prevPortion, file);
+        size_t totalBytes = bytesRead + prevPortion; // Общее количество байт в буфере
+
+        if (totalBytes == 0) break; // Если ничего не прочитано и ничего не сохранено, выходим
+
+        for (size_t i = 0; i < totalBytes; ++i) {
+            if (i + searchLength <= totalBytes && memcmp(&buffer[i], searchStr, searchLength) == 0) {
+                printf("Найдено \"%s\" (поз. %zu): ", searchStr, i);
                 for (int j = -2; j < (int)searchLength + 2; ++j) {
-                    if (i+j >= 0 && i+j < bytesRead) {
+                    if ((j >= 0 || (size_t)(-j) <= i) && (i + j < totalBytes)) {
                         if (j == 0) {
-                            printf("[%02x ", buffer[i+j]);
-                        } else if (j == (int)searchLength - 1) {
-                            printf("%02x] ", buffer[i+j]);
-                        } else {
-                            printf("%02x ", buffer[i+j]);
+                            printf("[ "); // Начало искомой последовательности
+                        } 
+                        printf("%02x ", buffer[i+j]);
+                        if (j == (int)searchLength - 1) {
+                            printf("] "); // Конец искомой последовательности
                         }
                     }
                 }
-                printf(" файл: %s\n", filepath);
+                printf("в файле: %s\n", filepath);
                 found++;
-                i += searchLength - 1; // Перемещаем индекс на конец найденной последовательности
+                i += searchLength - 1; // Перемещаем индекс за конец найденной последовательности
             }
         }
+
+        if (bytesRead == 0) break; // Если ничего не прочитано, выходим из цикла
+
+        if (bytesRead < sizeof(buffer) - prevPortion) {
+            // Если это последнее чтение и оно не заполнило весь буфер, завершаем
+            break;
+        }
+
+        prevPortion = searchLength - 1; // Сохраняем последние байты для следующего чтения
+        memmove(buffer, buffer + sizeof(buffer) - prevPortion, prevPortion);
     }
 
     fclose(file);
     return 0;
 }
 
-int processEntry(const char *fpath, const struct stat *sb, int typeflag) {
+int processEntry(const char *fpath, const struct stat * sb, int typeflag) {
+    (void)sb;
     if (typeflag == FTW_F) {
         searchStringInFile(fpath, searchString);
     }
@@ -116,7 +138,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (argc - optind < 2) {
-        fprintf(stderr, "Недостаточно аргументов\n");
+        fprintf(stderr, "Недостаточно аргументов\n\n");
         printHelp();
         return EXIT_FAILURE;
     }

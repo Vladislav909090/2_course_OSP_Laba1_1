@@ -1,0 +1,45 @@
+Отчет по утечкам памяти:
+
+
+(base) root@sergeyborss:~/2_course_OSP_Laba1_1/lab11vslN3245# valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./lab11vslN3245 /root/2_course_OSP_Laba1_1/ "ip"
+==578048== Memcheck, a memory error detector
+==578048== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==578048== Using Valgrind-3.16.1 and LibVEX; rerun with -h for copyright info
+==578048== Command: ./lab11vslN3245 /root/2_course_OSP_Laba1_1/ ip
+==578048== 
+Найдено "ip" (поз. 32): 63 72 [ 69 70 ] 74 20 в файле: /root/2_course_OSP_Laba1_1/.git/hooks/push-to-checkout.sample
+Найдено "ip" (поз. 637): 20 74 [ 69 70 ] 0a 23 в файле: /root/2_course_OSP_Laba1_1/.git/hooks/push-to-checkout.sample
+Найдено "ip" (поз. 876): 20 74 [ 69 70 ] 20 6f в файле: /root/2_course_OSP_Laba1_1/.git/hooks/push-to-checkout.sample
+Найдено "ip" (поз. 199): 20 74 [ 69 70 ] 20 6f в файле: /root/2_course_OSP_Laba1_1/.git/hooks/push-to-checkout.sample
+Найдено "ip" (поз. 33): 63 72 [ 69 70 ] 74 20 в файле: /root/2_course_OSP_Laba1_1/.git/hooks/update.sample
+Найдено "ip" (поз. 14): 63 72 [ 69 70 ] 74 20 в файле: /root/2_course_OSP_Laba1_1/.git/hooks/update.sample
+Найдено "ip" (поз. 636): 63 72 [ 69 70 ] 74 69 в файле: /root/2_course_OSP_Laba1_1/.git/hooks/update.sample
+Найдено "ip" (поз. 684): 63 72 [ 69 70 ] 74 69 в файле: /root/2_course_OSP_Laba1_1/.git/hooks/update.sample
+Найдено "ip" (поз. 768): 63 72 [ 69 70 ] 74 69 в файле: /root/2_course_OSP_Laba1_1/.git/hooks/update.sample
+Найдено "ip" (поз. 33): 63 72 [ 69 70 ] 74 20 в файле: /root/2_course_OSP_Laba1_1/.git/hooks/pre-applypatch.sample
+Найдено "ip" (поз. 33): 63 72 [ 69 70 ] 74 20 в файле: /root/2_course_OSP_Laba1_1/.git/hooks/pre-commit.sample
+Найдено "ip" (поз. 734): 20 74 [ 69 70 ] 20 6f в файле: /root/2_course_OSP_Laba1_1/.git/hooks/pre-rebase.sample
+Найдено "ip" (поз. 957): 63 72 [ 69 70 ] 74 2c в файле: /root/2_course_OSP_Laba1_1/.git/hooks/pre-rebase.sample
+Найдено "ip" (поз. 841): 20 74 [ 69 70 ] 20 6f в файле: /root/2_course_OSP_Laba1_1/.git/hooks/pre-rebase.sample
+Найдено "ip" (поз. 33): 63 72 [ 69 70 ] 74 20 в файле: /root/2_course_OSP_Laba1_1/.git/hooks/pre-receive.sample
+Найдено "ip" (поз. 33): 63 72 [ 69 70 ] 74 20 в файле: /root/2_course_OSP_Laba1_1/.git/hooks/post-update.sample
+Найдено "ip" (поз. 33): 63 72 [ 69 70 ] 74 20 в файле: /root/2_course_OSP_Laba1_1/.git/hooks/prepare-commit-msg.sample
+Найдено "ip" (поз. 175): 63 72 [ 69 70 ] 74 69 в файле: /root/2_course_OSP_Laba1_1/.git/hooks/prepare-commit-msg.sample
+Найдено "ip" (поз. 81): 63 72 [ 69 70 ] 74 20 в файле: /root/2_course_OSP_Laba1_1/.git/hooks/fsmonitor-watchman.sample
+Найдено "ip" (поз. 33): 63 72 [ 69 70 ] 74 20 в файле: /root/2_course_OSP_Laba1_1/.git/hooks/pre-merge-commit.sample
+Найдено "ip" (поз. 33): 63 72 [ 69 70 ] 74 20 в файле: /root/2_course_OSP_Laba1_1/.git/hooks/commit-msg.sample
+Найдено "ip" (поз. 33): 63 72 [ 69 70 ] 74 20 в файле: /root/2_course_OSP_Laba1_1/.git/hooks/applypatch-msg.sample
+Найдено "ip" (поз. 32): 63 72 [ 69 70 ] 74 20 в файле: /root/2_course_OSP_Laba1_1/.git/hooks/pre-push.sample
+Найдено "ip" (поз. 189): 63 72 [ 69 70 ] 74 20 в файле: /root/2_course_OSP_Laba1_1/.git/hooks/pre-push.sample
+Найдено "ip" (поз. 41): 63 72 [ 69 70 ] 74 69 в файле: /root/2_course_OSP_Laba1_1/.git/description
+
+В каталоге /root/2_course_OSP_Laba1_1/ найдено 25 совпадений
+==578048== 
+==578048== HEAP SUMMARY:
+==578048==     in use at exit: 0 bytes in 0 blocks
+==578048==   total heap usage: 306 allocs, 306 frees, 2,051,664 bytes allocated
+==578048== 
+==578048== All heap blocks were freed -- no leaks are possible
+==578048== 
+==578048== For lists of detected and suppressed errors, rerun with: -s
+==578048== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
