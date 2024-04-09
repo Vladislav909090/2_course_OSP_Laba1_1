@@ -44,21 +44,23 @@ int searchStringInFile(const char *filepath, const char *searchStr) {
     unsigned char buffer[1024];
     size_t bytesRead;
     while ((bytesRead = fread(buffer, 1, sizeof(buffer), file)) > 0) {
-        for (size_t i = 0; i < bytesRead; ++i) {
+        for (size_t i =  0; i < bytesRead; ++i) {
             if (i + searchLength <= bytesRead && memcmp(&buffer[i], searchStr, searchLength) == 0) {
-                printf("%s, найдена последовательность: ", filepath);
+                printf("найдено \"%s\" (позиция начала - %zu): ", searchStr, i);
                 for (int j = -2; j < (int)searchLength + 2; ++j) {
                     if (i+j >= 0 && i+j < bytesRead) {
-                        if (j >= 0 && j < (int)searchLength) {
-                            printf("[%02x]", buffer[i+j]);
+                        if (j == 0) {
+                            printf("[%02x ", buffer[i+j]);
+                        } else if (j == (int)searchLength - 1) {
+                            printf("%02x] ", buffer[i+j]);
                         } else {
-                            printf(" %02x ", buffer[i+j]);
+                            printf("%02x ", buffer[i+j]);
                         }
                     }
                 }
-                printf("\n");
+                printf(" файл: %s\n", filepath);
                 found++;
-                i += searchLength - 1;
+                i += searchLength - 1; // Перемещаем индекс на конец найденной последовательности
             }
         }
     }
