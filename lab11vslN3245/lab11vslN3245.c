@@ -6,6 +6,9 @@
 #include <time.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <stdarg.h>
+#include <errno.h>
+
 
 const char *searchString; // Глобальная переменная для хранения строки для поиска
 int found = 0;
@@ -24,16 +27,21 @@ const int jokesCount = sizeof(jokes) / sizeof(jokes[0]);
 
 void printJoke()
 {
-    srand(time(NULL));                   // Инициализация генератора случайных чисел
-    int jokeIndex = rand() % jokesCount; // Получение случайного индекса
-    printf("%s\n", jokes[jokeIndex]);    // Вывод шутки
+    srand(time(NULL)); 
+    int jokeIndex = rand() % jokesCount; 
+    printf("%s\n", jokes[jokeIndex]);  
 }
 
-void debugPrint(const char *message)
-{
-    if (getenv("LAB11DEBUG") != NULL)
-    {
-        fprintf(stderr, "DEBUG: %s\n", message);
+void debugPrint(const char *format, ...) {
+    if (getenv("LAB11DEBUG") != NULL) {
+        va_list args;
+        va_start(args, format);
+        
+        fprintf(stderr, "DEBUG: ");
+        vfprintf(stderr, format, args);
+        fprintf(stderr, "\n");
+        
+        va_end(args);
     }
 }
 
@@ -42,8 +50,7 @@ int searchStringInFile(const char *filepath, const char *searchStr)
     FILE *file = fopen(filepath, "rb");
     if (!file)
     {
-        fprintf(stderr, "Ошибка при открытии файла: %s", filepath);
-        perror("Ошибка при открытии файла");
+        debugPrint("Ошибка при открытии файла: %s", filepath);
         return -1;
     }
 
@@ -109,33 +116,31 @@ int searchStringInFile(const char *filepath, const char *searchStr)
 }
 
 int processEntry(const char *fpath, const struct stat *sb, int typeflag) {
-    (void)sb; // Не используемый параметр
+    (void)sb;
 
     struct stat path_stat;
     if (lstat(fpath, &path_stat) < 0) {
-        fprintf(stderr, "Не удалось получить информацию о файле: %s\n", fpath);
-        perror("lstat");
-        return 0; // Возвращаем 0, чтобы ftw продолжала обход
+        debugPrint("Не удалось получить информацию о файле: %s", fpath);
+        return 0; 
     }
 
     // Пропускаем символические ссылки
     if (S_ISLNK(path_stat.st_mode)) {
-        fprintf(stderr, "Путь является символической ссылкой, поэтому пропускаем его: %s\n", fpath);
-        return 0; // Пропускаем символическую ссылку
+        debugPrint("Путь является символической ссылкой, пропускаем его: %s", fpath);
+        return 0; 
     }
 
     // Пропускаем, если нет доступа на чтение
     if (access(fpath, R_OK) < 0) {
-        fprintf(stderr, "Не удалось открыть файл на чтение: %s\n", fpath);
-        perror("Доступ на чтение файла отсутствует");
-        return 0; // Возвращаем 0, чтобы ftw продолжала обход
+        debugPrint("Не удалось открыть файл на чтение: %s", fpath);
+        return 0; 
     }
 
     if (typeflag == FTW_F) {
         searchStringInFile(fpath, searchString);
     }
 
-    return 0; // Возвращаем 0, чтобы ftw продолжала обход
+    return 0; 
 }
 
 void printHelp()
@@ -159,7 +164,7 @@ int main(int argc, char *argv[])
     static struct option long_options[] = {
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
-        {"joke", no_argument, 0, 'j'}, // Добавление новой опции
+        {"joke", no_argument, 0, 'j'}, 
         {0, 0, 0, 0}};
 
     while ((opt = getopt_long(argc, argv, "hvj", long_options, NULL)) != -1)
@@ -173,7 +178,7 @@ int main(int argc, char *argv[])
             printVersion();
             return EXIT_SUCCESS;
         case 'j':
-            printJoke(); // Вызов функции вывода шутки
+            printJoke();
             return EXIT_SUCCESS;
         default:
             printHelp();
@@ -194,7 +199,7 @@ int main(int argc, char *argv[])
     struct stat path_stat;
     if (lstat(argv[optind], &path_stat) < 0)
     {
-        perror("Ошибка при получении информации об указанной директории");
+        fprintf(stderr, "Ошибка при получении информации об указанной директории\n");
         return EXIT_FAILURE;
     }
 
@@ -208,13 +213,13 @@ int main(int argc, char *argv[])
     // Проверка на доступность директории для чтения
     if (access(argv[optind], R_OK) < 0)
     {
-        perror("Указанная директория не доступна для чтения");
+        fprintf(stderr, "Указанная директория не доступна для чтения\n");
         return EXIT_FAILURE;
     }
 
-    if (ftw(argv[optind], processEntry, 20) == -1)
+    if (ftw(argv[optind], processEntry, 30) == -1)
     {
-        perror("ftw");
+        fprintf(stderr, "ftw ошибка: %s\n", strerror(errno));
         return EXIT_FAILURE;
     }
 

@@ -3,3 +3,6 @@
 no_access_file
 no_access_dir
 valgrind_link
+secret_file.txt
+link_to_project
+secret_folder
