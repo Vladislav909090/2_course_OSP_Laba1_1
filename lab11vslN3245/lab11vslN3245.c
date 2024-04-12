@@ -34,13 +34,10 @@ void printJoke()
 
 void debugPrint(const char *format, ...) {
     if (getenv("LAB11DEBUG") != NULL) {
+        fflush(stdout);  // Убедитесь, что stdout очищен перед записью в stderr
         va_list args;
         va_start(args, format);
-        
-        fprintf(stderr, "DEBUG: ");
         vfprintf(stderr, format, args);
-        fprintf(stderr, "\n");
-        
         va_end(args);
     }
 }
@@ -50,7 +47,7 @@ int searchStringInFile(const char *filepath, const char *searchStr)
     FILE *file = fopen(filepath, "rb");
     if (!file)
     {
-        debugPrint("Ошибка при открытии файла: %s", filepath);
+        debugPrint("DEBUG: Ошибка при открытии файла: %s\n", filepath);
         return -1;
     }
 
@@ -76,19 +73,20 @@ int searchStringInFile(const char *filepath, const char *searchStr)
         {
             if (i + searchLength <= totalBytes && memcmp(&buffer[i], searchStr, searchLength) == 0)
             {
-                printf("Найдено \"%s\" (поз. %zu): ", searchStr, i);
+                printf("Найдено \"%s\" ", searchStr);
+                debugPrint("(поз. %zu): ", i);
                 for (int j = -2; j < (int)searchLength + 2; ++j)
                 {
                     if ((j >= 0 || (size_t)(-j) <= i) && (i + j < totalBytes))
                     {
                         if (j == 0)
                         {
-                            printf("[ "); // Начало искомой последовательности
+                            debugPrint("[ "); // Начало искомой последовательности
                         }
-                        printf("%02x ", buffer[i + j]);
+                        debugPrint("%02x ", buffer[i + j]);
                         if (j == (int)searchLength - 1)
                         {
-                            printf("] "); // Конец искомой последовательности
+                            debugPrint("] "); // Конец искомой последовательности
                         }
                     }
                 }
@@ -120,19 +118,19 @@ int processEntry(const char *fpath, const struct stat *sb, int typeflag) {
 
     struct stat path_stat;
     if (lstat(fpath, &path_stat) < 0) {
-        debugPrint("Не удалось получить информацию о файле: %s", fpath);
+        debugPrint("DEBUG: Не удалось получить информацию о файле: %s\n", fpath);
         return 0; 
     }
 
     // Пропускаем символические ссылки
     if (S_ISLNK(path_stat.st_mode)) {
-        debugPrint("Путь является символической ссылкой, пропускаем его: %s", fpath);
+        debugPrint("DEBUG: Путь является символической ссылкой, пропускаем его: %s\n", fpath);
         return 0; 
     }
 
     // Пропускаем, если нет доступа на чтение
     if (access(fpath, R_OK) < 0) {
-        debugPrint("Не удалось открыть файл на чтение: %s", fpath);
+        debugPrint("DEBUG: Не удалось открыть файл на чтение: %s\n", fpath);
         return 0; 
     }
 
