@@ -25,6 +25,7 @@ const char *jokes[] = {
     "Штирлицу за шиворот упала гусеница. «Неподалеку взорвался танк», — догадался Штирлиц."};
 const int jokesCount = sizeof(jokes) / sizeof(jokes[0]);
 
+// Вывод рандоиной шутки (самое главное в этой программе)
 void printJoke()
 {
     srand(time(NULL)); 
@@ -32,19 +33,21 @@ void printJoke()
     printf("%s\n", jokes[jokeIndex]);  
 }
 
+// Работа с переменными среды
 void debugPrint(const char *format, ...) {
     if (getenv("LAB11DEBUG") != NULL) {
-        fflush(stdout);  // Убедитесь, что stdout очищен перед записью в stderr
+        fflush(stdout);  // Проверка на то, что stdout очищен перед записью в stderr 
         va_list args;
         va_start(args, format);
-        vfprintf(stderr, format, args);
+        vfprintf(stderr, format, args); // Вывод сообщения в поток ошибок
         va_end(args);
     }
 }
 
+// Функция для поиска строки в файле 
 int searchStringInFile(const char *filepath, const char *searchStr)
 {
-    FILE *file = fopen(filepath, "rb");
+    FILE *file = fopen(filepath, "rb"); // Открываем на чтение
     if (!file)
     {
         debugPrint("DEBUG: Ошибка при открытии файла: %s\n", filepath);
@@ -58,12 +61,12 @@ int searchStringInFile(const char *filepath, const char *searchStr)
         return 0;
     }
 
-    unsigned char buffer[1024 + searchLength - 1]; // Увеличенный буфер
+    unsigned char buffer[1024 + searchLength - 1]; // Увеличенный буфер (для "скользящего окна")
     size_t prevPortion = 0;                        // Размер сохраненных данных от предыдущего чтения
 
     while (1)
     {
-        size_t bytesRead = fread(buffer + prevPortion, 1, sizeof(buffer) - prevPortion, file);
+        size_t bytesRead = fread(buffer + prevPortion, 1, sizeof(buffer) - prevPortion, file); // читаем часть из файла
         size_t totalBytes = bytesRead + prevPortion; // Общее количество байт в буфере
 
         if (totalBytes == 0)
@@ -71,11 +74,11 @@ int searchStringInFile(const char *filepath, const char *searchStr)
 
         for (size_t i = 0; i < totalBytes; ++i)
         {
-            if (i + searchLength <= totalBytes && memcmp(&buffer[i], searchStr, searchLength) == 0)
+            if (i + searchLength <= totalBytes && memcmp(&buffer[i], searchStr, searchLength) == 0) // Проверяем, что не вышли за границу и что нашли совпадение
             {
-                printf("Найдено \"%s\" ", searchStr);
+                printf("Найдено \"%s\" ", searchStr); // Печатаем это
                 debugPrint("(поз. %zu): ", i);
-                for (int j = -2; j < (int)searchLength + 2; ++j)
+                for (int j = -2; j < (int)searchLength + 2; ++j) // Делаем красивый вывод байтов
                 {
                     if ((j >= 0 || (size_t)(-j) <= i) && (i + j < totalBytes))
                     {
@@ -113,9 +116,11 @@ int searchStringInFile(const char *filepath, const char *searchStr)
     return 0;
 }
 
+// Функция, которая вызывается ftw()
 int processEntry(const char *fpath, const struct stat *sb, int typeflag) {
     (void)sb;
 
+    // Проверка на ошибку получения данных о файле
     struct stat path_stat;
     if (lstat(fpath, &path_stat) < 0) {
         debugPrint("DEBUG: Не удалось получить информацию о файле: %s\n", fpath);
@@ -134,6 +139,7 @@ int processEntry(const char *fpath, const struct stat *sb, int typeflag) {
         return 0; 
     }
 
+    // Если все ок, запускаем поиск 
     if (typeflag == FTW_F) {
         searchStringInFile(fpath, searchString);
     }
@@ -141,6 +147,7 @@ int processEntry(const char *fpath, const struct stat *sb, int typeflag) {
     return 0; 
 }
 
+// Опция -h
 void printHelp()
 {
     printf("Использование:\n");
@@ -151,6 +158,7 @@ void printHelp()
     printf("-j, --joke       Вывод случайной шутки\n");
 }
 
+// Опция -v
 void printVersion()
 {
     printf("lab11vslN3245, версия 1.0\n");
@@ -159,13 +167,13 @@ void printVersion()
 int main(int argc, char *argv[])
 {
     int opt;
-    static struct option long_options[] = {
+    static struct option long_options[] = { // Определение основных команд
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
         {"joke", no_argument, 0, 'j'}, 
         {0, 0, 0, 0}};
 
-    while ((opt = getopt_long(argc, argv, "hvj", long_options, NULL)) != -1)
+    while ((opt = getopt_long(argc, argv, "hvj", long_options, NULL)) != -1) // Получаем аргументы программы
     {
         switch (opt)
         {
@@ -215,6 +223,7 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
+    // Проверка на другие ошибки, связанные с ftw
     if (ftw(argv[optind], processEntry, 30) == -1)
     {
         fprintf(stderr, "ftw ошибка: %s\n", strerror(errno));
