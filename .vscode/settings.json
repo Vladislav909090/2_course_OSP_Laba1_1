@@ -1,6 +1,0 @@
-{
-    "files.associations": {
-        "getopt.h": "c",
-        "cstdlib": "c"
-    }
-}
